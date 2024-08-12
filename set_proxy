@@ -1,10 +1,9 @@
 import os
 import zipfile
 from time import sleep
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 
-PROXY_HOST = '' # rotating proxy or host
+PROXY_HOST = ''  # rotating proxy or host
 PROXY_PORT = '' # port
 PROXY_USER = '' # username
 PROXY_PASS = '' # password
@@ -75,20 +74,9 @@ def get_chromedriver(use_proxy=False, user_agent=None):
 
 def main():
     driver = get_chromedriver(use_proxy=True)
-    #driver.get('https://www.google.com/search?q=my+ip+address')
-    driver.get('https://www.telerik.com/kendo-angular-ui/components/gauges/circulargauge/')
-    actions = ActionChains(driver)
+    driver.get('https://www.youtube.com')
     sleep(5)
-    el1 = driver.find_element('id', "onetrust-accept-btn-handler")
-    el1.click()
-    driver.execute_script('scroll(0,400)')
-    sleep(5)
-    iframeel = driver.find_element('xpath',"//*[@class='demo-example-sc-grlnui-1 eaZuns']")
-    driver.switch_to.frame(iframeel)
-    el2 = driver.find_element('xpath', "//*[contains(@class,'k-button-increase')]")
-    el3 = driver.find_element('xpath', "//*[contains(@class,'k-button-decrease')]")
-    actions.click_and_hold(el2).pause(1).release().click_and_hold(el3).pause(1).perform()
-    sleep(5)
+
 
 if __name__ == '__main__':
     main()
