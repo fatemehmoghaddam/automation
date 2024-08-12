@@ -1,0 +1,94 @@
+import os
+import zipfile
+from time import sleep
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium import webdriver
+
+PROXY_HOST = '' # rotating proxy or host
+PROXY_PORT = '' # port
+PROXY_USER = '' # username
+PROXY_PASS = '' # password
+
+manifest_json = """
+{
+    "version": "1.0.0",
+    "manifest_version": 2,
+    "name": "Chrome Proxy",
+    "permissions": [
+        "proxy",
+        "tabs",
+        "unlimitedStorage",
+        "storage",
+        "<all_urls>",
+        "webRequest",
+        "webRequestBlocking"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "minimum_chrome_version":"22.0.0"
+}
+"""
+
+background_js = """
+var config = {
+        mode: "fixed_servers",
+        rules: {
+        singleProxy: {
+            scheme: "http",
+            host: "%s",
+            port: parseInt(%s)
+        },
+        bypassList: ["localhost"]
+        }
+    };
+chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+function callbackFn(details) {
+    return {
+        authCredentials: {
+            username: "%s",
+            password: "%s"
+        }
+    };
+}
+chrome.webRequest.onAuthRequired.addListener(
+            callbackFn,
+            {urls: ["<all_urls>"]},
+            ['blocking']
+);
+""" % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
+
+def get_chromedriver(use_proxy=False, user_agent=None):
+    path = os.path.dirname(os.path.abspath(__file__))
+    chrome_options = webdriver.ChromeOptions()
+    if use_proxy:
+        pluginfile = 'proxy_auth_plugin.zip'
+
+        with zipfile.ZipFile(pluginfile, 'w') as zp:
+            zp.writestr("manifest.json", manifest_json)
+            zp.writestr("background.js", background_js)
+        chrome_options.add_extension(pluginfile)
+    if user_agent:
+        chrome_options.add_argument('--user-agent=%s' % user_agent)
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
+
+def main():
+    driver = get_chromedriver(use_proxy=True)
+    #driver.get('https://www.google.com/search?q=my+ip+address')
+    driver.get('https://www.telerik.com/kendo-angular-ui/components/gauges/circulargauge/')
+    actions = ActionChains(driver)
+    sleep(5)
+    el1 = driver.find_element('id', "onetrust-accept-btn-handler")
+    el1.click()
+    driver.execute_script('scroll(0,400)')
+    sleep(5)
+    iframeel = driver.find_element('xpath',"//*[@class='demo-example-sc-grlnui-1 eaZuns']")
+    driver.switch_to.frame(iframeel)
+    el2 = driver.find_element('xpath', "//*[contains(@class,'k-button-increase')]")
+    el3 = driver.find_element('xpath', "//*[contains(@class,'k-button-decrease')]")
+    actions.click_and_hold(el2).pause(1).release().click_and_hold(el3).pause(1).perform()
+    sleep(5)
+
+if __name__ == '__main__':
+    main()
