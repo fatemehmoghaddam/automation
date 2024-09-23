@@ -1,0 +1,13 @@
+import base64
+import json
+
+jwt_token = "your JWT token"
+
+header, payload, signature = jwt_token.split('.')
+
+decoded_payload = base64.urlsafe_b64decode(payload + '==')
+
+payload_json = json.loads(decoded_payload)
+
+print(payload_json)
+
